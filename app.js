@@ -29,8 +29,14 @@
   }
 
   // ---------- Storage ----------
-  function loadCofre() { return JSON.parse(localStorage.getItem('cofre') || '[]'); }
+  function loadCofre() {
+    try {
+      const data = JSON.parse(localStorage.getItem('cofre') || '[]');
+      return data.filter(item => item && item.salt && item.iv && item.ct && item.site);
+    } catch { return []; }
+  }
   function saveCofre(c) { localStorage.setItem('cofre', JSON.stringify(c)); }
+  function clearCofre() { localStorage.removeItem('cofre'); cofreCache = []; }
 
   // ---------- UI ----------
   const $ = id => document.getElementById(id);
@@ -68,7 +74,6 @@
       .replace(/</g, '<')
       .replace(/>/g, '>')
       .replace(/"/g, '"');
-      // Skip single quote replacement to avoid string delimiter issues
   }
 
   // ---------- Actions ----------
@@ -109,14 +114,34 @@
   $('btn-desbloquear').addEventListener('click', async () => {
     const pwd = $('master-key').value.trim();
     if (!pwd) return alert('Digite a senha mestra');
+    
     cofreCache = loadCofre();
-    if (cofreCache.length) {
-      try { await decrypt(cofreCache[0], pwd); }
-      catch { return alert('Senha mestra incorreta!'); }
+    
+    // Se não há dados válidos, aceita qualquer senha (primeiro uso)
+    if (cofreCache.length === 0) {
+      masterKey = pwd;
+      showCofre();
+      render();
+      return;
     }
-    masterKey = pwd;
-    showCofre();
-    render();
+    
+    // Há dados - validar senha
+    try {
+      await decrypt(cofreCache[0], pwd);
+      masterKey = pwd;
+      showCofre();
+      render();
+    } catch (e) {
+      alert('Senha incorreta.');
+    }
+  });
+
+  $('btn-limpar').addEventListener('click', () => {
+    if (confirm('TEM CERTEZA? Isso apaga TODAS as senhas permanentemente.')) {
+      clearCofre();
+      $('master-key').value = '';
+      alert('Cofre limpo. Defina uma nova senha mestra.');
+    }
   });
 
   $('btn-sair').addEventListener('click', lockCofre);
