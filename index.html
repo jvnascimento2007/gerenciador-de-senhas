@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Gerenciador de Senhas</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Cofre de Senhas</h1>
+        <input type="password" id="master-password" placeholder="Mestre Senha">
+        <input type="text" id="site" placeholder="Site">
+        <input type="password" id="password" placeholder="Senha">
+        <button onclick="salvar()">Salvar</button>
+        <hr>
+        <h3>Senhas Salvas</h3>
+        <input type="text" id="site-busca" placeholder="Buscar site">
+        <button onclick="buscar()">Buscar/Descriptografar</button>
+        <p id="resultado"></p>
+    </div>
+    <script src="app.js"></script>
+</body>
+</html>
