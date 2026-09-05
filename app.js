@@ -158,12 +158,15 @@
     $('pass-reg').focus();
   }
 
-  async function deletePwd(id) {
-    showLoading('Excluindo...');
+  function deletePwd(id) {
+    // Remove do cache e localStorage
     cofreCache = cofreCache.filter(i => i.id !== id);
     saveCofre(cofreCache);
-    await render();
-    hideLoading();
+    // Remove apenas o DOM do item (sem re-renderizar lista inteira)
+    const tr = tbody.querySelector('tr[data-id="' + id + '"]');
+    if (tr) tr.remove();
+    const card = cardList.querySelector('.pwd-card[data-id="' + id + '"]');
+    if (card) card.remove();
   }
 
   // ---------- Event Listeners ----------
