@@ -159,9 +159,11 @@
   }
 
   function deletePwd(id) {
+    showLoading('Excluindo...');
     cofreCache = cofreCache.filter(i => i.id !== id);
     saveCofre(cofreCache);
     render();
+    hideLoading();
   }
 
   // ---------- Event Listeners ----------
@@ -246,60 +248,6 @@
   };
   tbody.addEventListener('click', handleActionClick);
   cardList.addEventListener('click', handleActionClick);
-
-  // ---------- Actions ----------
-  function updateEyeButton(id, show) {
-    const tableBtn = tbody.querySelector('.btn-eye[data-id="' + id + '"]');
-    if (tableBtn) tableBtn.title = show ? 'Ocultar senha' : 'Mostrar senha';
-    const cardBtn = cardList.querySelector('.btn-eye[data-id="' + id + '"]');
-    if (cardBtn) cardBtn.title = show ? 'Ocultar senha' : 'Mostrar senha';
-  }
-
-  function togglePwd(id) {
-    // Table
-    const cell = tbody.querySelector('.pwd-cell[data-id="' + id + '"]');
-    if (cell) {
-      const blurred = cell.querySelector('.pwd-blur');
-      const clear   = cell.querySelector('.pwd-clear');
-      const show = blurred.hidden;
-      blurred.hidden = !show;
-      clear.hidden = show;
-      updateEyeButton(id, show);
-    }
-    // Card
-    const card = cardList.querySelector('.pwd-card[data-id="' + id + '"]');
-    if (card) {
-      const blurred = card.querySelector('.pwd-blur');
-      const clear   = card.querySelector('.pwd-clear');
-      const show = blurred.hidden;
-      blurred.hidden = !show;
-      clear.hidden = show;
-      updateEyeButton(id, show);
-    }
-  }
-
-  async function copyPwd(id) {
-    const item = cofreCache.find(i => i.id === id);
-    if (!item) return;
-    const pass = await decrypt(item, masterKey);
-    await navigator.clipboard.writeText(pass);
-    alert('Senha copiada!');
-  }
-
-  function editPwd(id) {
-    const item = cofreCache.find(i => i.id === id);
-    if (!item) return;
-    $('site-reg').value = item.site;
-    editIdEl.value = id;
-    $('pass-reg').value = '';
-    $('pass-reg').focus();
-  }
-
-  function deletePwd(id) {
-    cofreCache = cofreCache.filter(i => i.id !== id);
-    saveCofre(cofreCache);
-    render();
-  }
 
   // Bloqueio por inatividade (5 min)
   let idleTimer;
