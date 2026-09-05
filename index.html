@@ -1,34 +1,35 @@
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cofre Seguro</title>
-    <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cofre Seguro</title>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div id="tela-acesso" class="container">
-        <h1>🔐 Cofre de Senhas</h1>
-        <input type="password" id="master-key" placeholder="Mestre Senha">
-        <button onclick="desbloquear()">Abrir Cofre</button>
-    </div>
+  <div id="tela-acesso" class="container">
+    <h1>🔐 Cofre de Senhas</h1>
+    <input type="password" id="master-key" placeholder="Mestre Senha" autocomplete="off">
+    <button id="btn-desbloquear">Abrir Cofre</button>
+  </div>
 
-    <div id="tela-cofre" class="dashboard" style="display:none;">
-        <div class="col-lista">
-            <h2>Minhas Senhas</h2>
-            <table id="tabela-senhas">
-                <thead><tr><th>Site</th><th>Senha</th><th>Ações</th></tr></thead>
-                <tbody id="lista-senhas"></tbody>
-            </table>
-        </div>
-        <div class="col-registro">
-            <h2>Registrar Nova</h2>
-            <input type="text" id="site-reg" placeholder="Site">
-            <input type="hidden" id="edit-id"><input type="password" id="pass-reg" placeholder="Senha">
-            <button onclick="salvar()">Salvar no Cofre</button>
-            <button class="btn-sair" onclick="location.reload()">Bloquear e Sair</button>
-        </div>
-    </div>
-    <script src="app.js"></script>
+  <div id="tela-cofre" class="dashboard" hidden>
+    <section class="col-lista">
+      <h2>Minhas Senhas</h2>
+      <table id="tabela-senhas">
+        <thead><tr><th>Site</th><th>Senha</th><th>Ações</th></tr></thead>
+        <tbody id="lista-senhas"></tbody>
+      </table>
+    </section>
+    <section class="col-registro">
+      <h2>Registrar Nova</h2>
+      <input type="hidden" id="edit-id">
+      <input type="text" id="site-reg" placeholder="Site" autocomplete="off">
+      <input type="password" id="pass-reg" placeholder="Senha" autocomplete="new-password">
+      <button id="btn-salvar">Salvar no Cofre</button>
+      <button id="btn-sair" class="btn-secondary">Bloquear e Sair</button>
+    </section>
+  </div>
+  <script src="app.js"></script>
 </body>
 </html>

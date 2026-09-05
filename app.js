@@ -1,86 +1,161 @@
-let masterKey = null;
+(() => {
+  'use strict';
+  let masterKey = null;
+  let cofreCache = [];
 
-async function deriveKey(masterPassword, salt) {
-    const encoder = new TextEncoder();
-    const keyMaterial = await crypto.subtle.importKey("raw", encoder.encode(masterPassword), "PBKDF2", false, ["deriveKey"]);
-    return crypto.subtle.deriveKey(
-        { name: "PBKDF2", salt, iterations: 100000, hash: "SHA-256" },
-        keyMaterial, { name: "AES-GCM", length: 256 }, false, ["encrypt", "decrypt"]
-    );
-}
+  // ---------- Crypto ----------
+  async function deriveKey(pwd, salt) {
+    const enc = new TextEncoder();
+    const base = await crypto.subtle.importKey('raw', enc.encode(pwd), 'PBKDF2', false, ['deriveKey']);
+    return crypto.subtle.deriveKey({ name: 'PBKDF2', salt, iterations: 100000, hash: 'SHA-256' },
+      base, { name: 'AES-GCM', length: 256 }, false, ['encrypt', 'decrypt']);
+  }
 
-async function desbloquear() {
-    const master = document.getElementById('master-key').value;
-    const cofre = JSON.parse(localStorage.getItem('cofre') || '[]');
-    if (cofre.length > 0) {
-        try {
-            const salt = Uint8Array.from(atob(cofre[0].salt), c => c.charCodeAt(0));
-            await deriveKey(master, salt);
-        } catch(e) { return alert("Senha mestre incorreta!"); }
-    }
-    masterKey = master;
-    document.getElementById('tela-acesso').style.display = 'none';
-    document.getElementById('tela-cofre').style.display = 'block';
-    listarSenhas();
-}
-
-async function salvar() {
-    const site = document.getElementById('site-reg').value;
-    const pass = document.getElementById('pass-reg').value;
-    const editId = document.getElementById('edit-id').value;
-    if (!site || !pass) return alert("Preencha tudo!");
-    
-    let cofre = JSON.parse(localStorage.getItem('cofre') || '[]');
-    if (editId) {
-        cofre = cofre.filter(i => i.id != editId);
-        document.getElementById('edit-id').value = '';
-    }
-    
+  async function encrypt(text, pwd) {
     const salt = crypto.getRandomValues(new Uint8Array(16));
-    const iv = crypto.getRandomValues(new Uint8Array(12));
-    const key = await deriveKey(masterKey, salt);
-    const ciphertext = await crypto.subtle.encrypt({ name: "AES-GCM", iv }, key, new TextEncoder().encode(pass));
-    
-    cofre.push({ id: editId || Date.now(), site, ciphertext: btoa(String.fromCharCode(...new Uint8Array(ciphertext))), salt: btoa(String.fromCharCode(...salt)), iv: btoa(String.fromCharCode(...iv)) });
-    localStorage.setItem('cofre', JSON.stringify(cofre));
-    listarSenhas();
-}
+    const iv   = crypto.getRandomValues(new Uint8Array(12));
+    const key  = await deriveKey(pwd, salt);
+    const ct   = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, key, new TextEncoder().encode(text));
+    return { ct: btoa(String.fromCharCode(...new Uint8Array(ct))), salt: btoa(String.fromCharCode(...salt)), iv: btoa(String.fromCharCode(...iv)) };
+  }
 
-function editar(id, site, pass) {
-    document.getElementById('site-reg').value = site;
-    document.getElementById('pass-reg').value = pass;
-    document.getElementById('edit-id').value = id;
-}
+  async function decrypt(item, pwd) {
+    const salt = Uint8Array.from(atob(item.salt), c => c.charCodeAt(0));
+    const iv   = Uint8Array.from(atob(item.iv),   c => c.charCodeAt(0));
+    const ct   = Uint8Array.from(atob(item.ct),   c => c.charCodeAt(0));
+    const key  = await deriveKey(pwd, salt);
+    const pt   = await crypto.subtle.decrypt({ name: 'AES-GCM', iv }, key, ct);
+    return new TextDecoder().decode(pt);
+  }
 
-function excluir(id) {
-    let cofre = JSON.parse(localStorage.getItem('cofre') || '[]');
-    cofre = cofre.filter(item => item.id !== id);
-    localStorage.setItem('cofre', JSON.stringify(cofre));
-    listarSenhas();
-}
+  // ---------- Storage ----------
+  function loadCofre() { return JSON.parse(localStorage.getItem('cofre') || '[]'); }
+  function saveCofre(c) { localStorage.setItem('cofre', JSON.stringify(c)); }
 
-function copiar(texto) { navigator.clipboard.writeText(texto); alert("Copiado!"); }
+  // ---------- UI ----------
+  const $ = id => document.getElementById(id);
+  const telaAcesso = $('tela-acesso');
+  const telaCofre  = $('tela-cofre');
+  const tbody      = $('lista-senhas');
+  const editIdEl   = $('edit-id');
 
-async function listarSenhas() {
-    const cofre = JSON.parse(localStorage.getItem('cofre') || '[]');
-    const tbody = document.getElementById('lista-senhas');
+  function showCofre() { telaAcesso.hidden = true; telaCofre.hidden = false; }
+  function lockCofre() { telaAcesso.hidden = false; telaCofre.hidden = true; masterKey = null; cofreCache = []; tbody.innerHTML = ''; $('master-key').value = ''; }
+
+  // ---------- Render ----------
+  async function render() {
     tbody.innerHTML = '';
-    for (const item of cofre) {
-        const salt = Uint8Array.from(atob(item.salt), c => c.charCodeAt(0));
-        const iv = Uint8Array.from(atob(item.iv), c => c.charCodeAt(0));
-        const ciphertext = Uint8Array.from(atob(item.ciphertext), c => c.charCodeAt(0));
-        const key = await deriveKey(masterKey, salt);
-        const decrypted = await crypto.subtle.decrypt({ name: "AES-GCM", iv }, key, ciphertext);
-        const pass = new TextDecoder().decode(decrypted);
-        const tr = document.createElement('tr');
-        tr.innerHTML = `<td>${item.site}</td>
-            <td id="pass-${item.id}" style="filter:blur(5px)">${pass}</td>
-            <td>
-                <button onclick="document.getElementById('pass-${item.id}').style.filter='none'">👁️</button>
-                <button onclick="copiar('${pass}')">📋</button>
-                <button onclick="editar(${item.id}, '${item.site}', '${pass}')">✏️</button>
-                <button onclick="excluir(${item.id})">🗑️</button>
-            </td>`;
-        tbody.appendChild(tr);
+    for (const item of cofreCache) {
+      const pass = await decrypt(item, masterKey);
+      const tr = document.createElement('tr');
+      tr.dataset.id = item.id;
+      tr.innerHTML = `
+        <td>${escapeHtml(item.site)}</td>
+        <td class="pwd-cell" data-id="${item.id}"><span class="pwd-blur">${'•'.repeat(pass.length)}</span><span class="pwd-clear" hidden>${escapeHtml(pass)}</span></td>
+        <td>
+          <button class="btn-eye" data-action="toggle" data-id="${item.id}" title="Mostrar/ocultar">👁️</button>
+          <button class="btn-copy" data-action="copy" data-id="${item.id}" title="Copiar">📋</button>
+          <button class="btn-edit" data-action="edit" data-id="${item.id}" title="Editar">✏️</button>
+          <button class="btn-del"  data-action="delete" data-id="${item.id}" title="Excluir">🗑️</button>
+        </td>`;
+      tbody.appendChild(tr);
     }
-}
+  }
+
+  function escapeHtml(s) {
+    return s
+      .replace(/&/g, '&')
+      .replace(/</g, '<')
+      .replace(/>/g, '>')
+      .replace(/"/g, '"');
+      // Skip single quote replacement to avoid string delimiter issues
+  }
+
+  // ---------- Actions ----------
+  function togglePwd(id) {
+    const cell = tbody.querySelector('.pwd-cell[data-id="' + id + '"]');
+    if (!cell) return;
+    const blurred = cell.querySelector('.pwd-blur');
+    const clear   = cell.querySelector('.pwd-clear');
+    const show = blurred.hidden;
+    blurred.hidden = !show;
+    clear.hidden = show;
+  }
+
+  async function copyPwd(id) {
+    const item = cofreCache.find(i => i.id === id);
+    if (!item) return;
+    const pass = await decrypt(item, masterKey);
+    await navigator.clipboard.writeText(pass);
+    alert('Senha copiada!');
+  }
+
+  function editPwd(id) {
+    const item = cofreCache.find(i => i.id === id);
+    if (!item) return;
+    $('site-reg').value = item.site;
+    editIdEl.value = id;
+    $('pass-reg').value = '';
+    $('pass-reg').focus();
+  }
+
+  function deletePwd(id) {
+    cofreCache = cofreCache.filter(i => i.id !== id);
+    saveCofre(cofreCache);
+    render();
+  }
+
+  // ---------- Event Listeners ----------
+  $('btn-desbloquear').addEventListener('click', async () => {
+    const pwd = $('master-key').value.trim();
+    if (!pwd) return alert('Digite a senha mestra');
+    cofreCache = loadCofre();
+    if (cofreCache.length) {
+      try { await decrypt(cofreCache[0], pwd); }
+      catch { return alert('Senha mestra incorreta!'); }
+    }
+    masterKey = pwd;
+    showCofre();
+    render();
+  });
+
+  $('btn-sair').addEventListener('click', lockCofre);
+
+  $('btn-salvar').addEventListener('click', async () => {
+    const site = $('site-reg').value.trim();
+    const pass = $('pass-reg').value;
+    if (!site || !pass) return alert('Preencha todos os campos');
+    const editId = editIdEl.value ? Number(editIdEl.value) : null;
+    const encrypted = await encrypt(pass, masterKey);
+    const newItem = { id: editId || Date.now() + Math.random(), site, ...encrypted };
+    if (editId) cofreCache = cofreCache.filter(i => i.id !== editId);
+    cofreCache.push(newItem);
+    saveCofre(cofreCache);
+    editIdEl.value = '';
+    $('site-reg').value = '';
+    $('pass-reg').value = '';
+    render();
+  });
+
+  // Delegação única na tabela
+  tbody.addEventListener('click', e => {
+    const btn = e.target.closest('button[data-action]');
+    if (!btn) return;
+    const id = Number(btn.dataset.id);
+    switch (btn.dataset.action) {
+      case 'toggle': togglePwd(id); break;
+      case 'copy':   copyPwd(id);   break;
+      case 'edit':   editPwd(id);   break;
+      case 'delete': deletePwd(id); break;
+    }
+  });
+
+  // Bloqueio por inatividade (5 min)
+  let idleTimer;
+  function resetIdle() {
+    clearTimeout(idleTimer);
+    idleTimer = setTimeout(lockCofre, 5 * 60 * 1000);
+  }
+  ['mousemove','keydown','click','touchstart'].forEach(ev => document.addEventListener(ev, resetIdle, {passive:true}));
+  resetIdle();
+})();
