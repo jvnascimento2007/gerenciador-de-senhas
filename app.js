@@ -43,16 +43,20 @@
   const telaAcesso = $('tela-acesso');
   const telaCofre  = $('tela-cofre');
   const tbody      = $('lista-senhas');
+  const cardList   = $('card-list');
   const editIdEl   = $('edit-id');
 
   function showCofre() { telaAcesso.hidden = true; telaCofre.hidden = false; }
-  function lockCofre() { telaAcesso.hidden = false; telaCofre.hidden = true; masterKey = null; cofreCache = []; tbody.innerHTML = ''; $('master-key').value = ''; }
+  function lockCofre() { telaAcesso.hidden = false; telaCofre.hidden = true; masterKey = null; cofreCache = []; tbody.innerHTML = ''; cardList.innerHTML = ''; $('master-key').value = ''; }
 
   // ---------- Render ----------
   async function render() {
     tbody.innerHTML = '';
+    cardList.innerHTML = '';
     for (const item of cofreCache) {
       const pass = await decrypt(item, masterKey);
+      
+      // Table row (desktop)
       const tr = document.createElement('tr');
       tr.dataset.id = item.id;
       tr.innerHTML = `
@@ -65,6 +69,24 @@
           <button class="btn-del"  data-action="delete" data-id="${item.id}" title="Excluir">🗑️</button>
         </td>`;
       tbody.appendChild(tr);
+
+      // Card (mobile)
+      const card = document.createElement('div');
+      card.className = 'pwd-card';
+      card.dataset.id = item.id;
+      card.innerHTML = `
+        <div class="card-header">${escapeHtml(item.site)}</div>
+        <div class="pwd-row">
+          <span class="pwd-blur">${'•'.repeat(pass.length)}</span>
+          <span class="pwd-clear" hidden>${escapeHtml(pass)}</span>
+          <button class="btn-eye" data-action="toggle" data-id="${item.id}" title="Mostrar/ocultar">👁️</button>
+        </div>
+        <div class="card-actions">
+          <button class="btn-copy" data-action="copy" data-id="${item.id}">📋 Copiar</button>
+          <button class="btn-edit" data-action="edit" data-id="${item.id}">✏️ Editar</button>
+          <button class="btn-del" data-action="delete" data-id="${item.id}">🗑️ Excluir</button>
+        </div>`;
+      cardList.appendChild(card);
     }
   }
 
@@ -78,13 +100,24 @@
 
   // ---------- Actions ----------
   function togglePwd(id) {
+    // Table
     const cell = tbody.querySelector('.pwd-cell[data-id="' + id + '"]');
-    if (!cell) return;
-    const blurred = cell.querySelector('.pwd-blur');
-    const clear   = cell.querySelector('.pwd-clear');
-    const show = blurred.hidden;
-    blurred.hidden = !show;
-    clear.hidden = show;
+    if (cell) {
+      const blurred = cell.querySelector('.pwd-blur');
+      const clear   = cell.querySelector('.pwd-clear');
+      const show = blurred.hidden;
+      blurred.hidden = !show;
+      clear.hidden = show;
+    }
+    // Card
+    const card = cardList.querySelector('.pwd-card[data-id="' + id + '"]');
+    if (card) {
+      const blurred = card.querySelector('.pwd-blur');
+      const clear   = card.querySelector('.pwd-clear');
+      const show = blurred.hidden;
+      blurred.hidden = !show;
+      clear.hidden = show;
+    }
   }
 
   async function copyPwd(id) {
@@ -162,8 +195,8 @@
     render();
   });
 
-  // Delegação única na tabela
-  tbody.addEventListener('click', e => {
+  // Delegação única na tabela E cards
+  const handleActionClick = e => {
     const btn = e.target.closest('button[data-action]');
     if (!btn) return;
     const id = Number(btn.dataset.id);
@@ -173,7 +206,9 @@
       case 'edit':   editPwd(id);   break;
       case 'delete': deletePwd(id); break;
     }
-  });
+  };
+  tbody.addEventListener('click', handleActionClick);
+  cardList.addEventListener('click', handleActionClick);
 
   // Bloqueio por inatividade (5 min)
   let idleTimer;

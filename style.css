@@ -6,9 +6,23 @@ body { font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; back
 .col-registro { max-width: 420px; }
 h1 { margin: 0 0 1.5rem; font-size: 1.75rem; }
 h2 { margin: 0 0 1rem; font-size: 1.25rem; }
-table { width: 100%; border-collapse: collapse; font-size: 0.95rem; }
+
+/* TABLE - Desktop */
+.table-wrap { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-size: 0.95rem; min-width: 600px; }
 th, td { padding: 0.75rem 1rem; border-bottom: 1px solid #eef0f2; text-align: left; }
 th { color: #6b7280; font-weight: 600; }
+td:last-child { white-space: nowrap; }
+td:last-child button { width: auto; padding: 0.4rem 0.7rem; font-size: 0.85rem; margin: 0 0.2rem; border-radius: 6px; }
+
+/* CARDS - Mobile */
+.card-list { display: none; }
+.pwd-row { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; }
+.pwd-row .pwd-blur,
+.pwd-row .pwd-clear { flex: 1; min-width: 120px; }
+.card-actions { display: flex; gap: 0.5rem; margin-top: 0.5rem; flex-wrap: wrap; }
+.card-actions button { flex: 1; min-width: 80px; }
+
 input { width: 100%; padding: 0.7rem 1rem; margin-bottom: 0.75rem; border: 1px solid #d1d5db; border-radius: 10px; font-size: 1rem; transition: border 0.2s; }
 input:focus { outline: none; border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59,130,246,0.15); }
 button { width: 100%; padding: 0.75rem; border: none; border-radius: 10px; font-size: 1rem; font-weight: 600; cursor: pointer; transition: background 0.2s; }
@@ -18,7 +32,21 @@ button:not(.btn-secondary):not(.btn-danger):hover { background: #2563eb; }
 .btn-secondary:hover { background: #d1d5db; }
 .btn-danger { background: #ef4444; color: #fff; margin-top: 0.75rem; }
 .btn-danger:hover { background: #dc2626; }
-td:last-child { white-space: nowrap; }
-td:last-child button { width: auto; padding: 0.4rem 0.7rem; font-size: 0.85rem; margin: 0 0.2rem; border-radius: 6px; }
-@media (max-width: 900px) { .dashboard { flex-direction: column; } .col-registro { max-width: 100%; } }
+
+@media (max-width: 900px) { 
+  .dashboard { flex-direction: column; } 
+  .col-registro { max-width: 100%; } 
+}
+
+@media (max-width: 640px) {
+  .table-wrap { display: none; }
+  .card-list { display: block; }
+  .pwd-cell { display: flex; flex-direction: column; gap: 0.5rem; }
+  .pwd-row { width: 100%; }
+  .pwd-row .pwd-blur,
+  .pwd-row .pwd-clear { width: 100%; font-family: monospace; font-size: 0.95rem; padding: 0.5rem; background: #f9fafb; border-radius: 8px; border: 1px solid #eef0f2; text-align: left; }
+  .card-actions { width: 100%; }
+  .card-actions button { width: 100%; padding: 0.6rem; font-size: 0.9rem; }
+}
+
 [hidden] { display: none !important; }
