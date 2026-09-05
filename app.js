@@ -75,7 +75,7 @@ async function listarSenhas() {
             const ciphertext = Uint8Array.from(atob(item.ciphertext), c => c.charCodeAt(0));
             const key = await deriveKey(masterKey, salt);
             const decrypted = await crypto.subtle.decrypt({ name: "AES-GCM", iv }, key, ciphertext);
-            lista.innerHTML += `<p><strong>${item.site}:</strong> ${new TextDecoder().decode(decrypted)}</p>`;
+            lista.innerHTML += `<tr><td>${item.site}</td><td>${new TextDecoder().decode(decrypted)}</td></tr>`;
         } catch {
             lista.innerHTML += `<p style="color:red">${item.site}: Erro ao descriptografar (senha incorreta)</p>`;
         }
