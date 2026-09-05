@@ -2,29 +2,32 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <title>Cofre de Senhas Pro</title>
+    <title>Cofre Seguro</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <div class="container">
         <h1>Cofre de Senhas</h1>
         
-        <section id="registrar">
-            <h2>Registrar Nova Senha</h2>
-            <input type="password" id="master-reg" placeholder="Mestre Senha">
-            <input type="text" id="site-reg" placeholder="Site">
-            <input type="password" id="pass-reg" placeholder="Senha">
-            <button onclick="salvar()">Salvar no Cofre</button>
-        </section>
+        <!-- Tela de Acesso -->
+        <div id="tela-acesso">
+            <input type="password" id="master-key" placeholder="Mestre Senha">
+            <button onclick="desbloquear()">Abrir Cofre</button>
+        </div>
 
-        <hr>
-
-        <section id="acessar">
-            <h2>Abrir Cofre</h2>
-            <input type="password" id="master-open" placeholder="Mestre Senha">
-            <button onclick="abrirCofre()">Desbloquear e Listar</button>
+        <!-- Área Privada -->
+        <div id="tela-cofre" style="display:none;">
+            <section>
+                <h3>Registrar Nova Senha</h3>
+                <input type="text" id="site-reg" placeholder="Site">
+                <input type="password" id="pass-reg" placeholder="Senha">
+                <button onclick="salvar()">Salvar</button>
+            </section>
+            <hr>
+            <h3>Minhas Senhas</h3>
             <div id="lista-senhas"></div>
-        </section>
+            <button onclick="location.reload()" style="background:#e74c3c; margin-top:20px;">Bloquear e Sair</button>
+        </div>
     </div>
     <script src="app.js"></script>
 </body>
