@@ -3,20 +3,20 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Cofre Seguro</title>
+  <title>Gerenciador de Senhas</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <div id="tela-acesso" class="container">
-    <h1>🔐 Cofre de Senhas</h1>
-    <input type="password" id="master-key" placeholder="Mestre Senha" autocomplete="off">
-    <button id="btn-desbloquear">Abrir Cofre</button>
-    <button id="btn-limpar" class="btn-danger">Limpar Cofre (Esqueci a Senha)</button>
+    <h1>🔐 Gerenciador de Senhas</h1>
+    <input type="password" id="master-key" placeholder="Senha mestra" autocomplete="off">
+    <button id="btn-desbloquear">Abrir</button>
+    <button id="btn-limpar" class="btn-danger">Limpar cofre</button>
   </div>
 
   <div id="tela-cofre" class="dashboard" hidden>
     <section class="col-lista">
-      <h2>Minhas Senhas</h2>
+      <h2>Senhas salvas</h2>
       <div class="table-wrap">
         <table id="tabela-senhas">
           <thead><tr><th>Site</th><th>Senha</th><th>Ações</th></tr></thead>
@@ -26,12 +26,12 @@
       <div id="card-list" class="card-list"></div>
     </section>
     <section class="col-registro">
-      <h2>Registrar Nova</h2>
+      <h2>Nova senha</h2>
       <input type="hidden" id="edit-id">
       <input type="text" id="site-reg" placeholder="Site" autocomplete="off">
       <input type="password" id="pass-reg" placeholder="Senha" autocomplete="new-password">
-      <button id="btn-salvar">Salvar no Cofre</button>
-      <button id="btn-sair" class="btn-secondary">Bloquear e Sair</button>
+      <button id="btn-salvar">Salvar</button>
+      <button id="btn-sair" class="btn-secondary">Sair</button>
     </section>
   </div>
   <script src="app.js"></script>

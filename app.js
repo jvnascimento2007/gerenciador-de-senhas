@@ -56,21 +56,21 @@
     for (const item of cofreCache) {
       const pass = await decrypt(item, masterKey);
       
-      // Table row (desktop)
+      // Table row (desktop) - EMOJI ONLY buttons
       const tr = document.createElement('tr');
       tr.dataset.id = item.id;
       tr.innerHTML = `
         <td>${escapeHtml(item.site)}</td>
         <td class="pwd-cell" data-id="${item.id}"><span class="pwd-blur">${'•'.repeat(pass.length)}</span><span class="pwd-clear" hidden>${escapeHtml(pass)}</span></td>
         <td>
-          <button class="btn-eye" data-action="toggle" data-id="${item.id}" title="Mostrar/ocultar">👁️ Mostrar</button>
-          <button class="btn-copy" data-action="copy" data-id="${item.id}" title="Copiar">📋 Copiar</button>
-          <button class="btn-edit" data-action="edit" data-id="${item.id}" title="Editar">✏️ Editar</button>
-          <button class="btn-del"  data-action="delete" data-id="${item.id}" title="Excluir">🗑️ Excluir</button>
+          <button class="btn-eye" data-action="toggle" data-id="${item.id}" title="Mostrar/ocultar">👁️</button>
+          <button class="btn-copy" data-action="copy" data-id="${item.id}" title="Copiar">📋</button>
+          <button class="btn-edit" data-action="edit" data-id="${item.id}" title="Editar">✏️</button>
+          <button class="btn-del"  data-action="delete" data-id="${item.id}" title="Excluir">🗑️</button>
         </td>`;
       tbody.appendChild(tr);
 
-      // Card (mobile)
+      // Card (mobile) - TEXT + EMOJI buttons
       const card = document.createElement('div');
       card.className = 'pwd-card';
       card.dataset.id = item.id;
@@ -79,7 +79,7 @@
         <div class="pwd-row">
           <span class="pwd-blur">${'•'.repeat(pass.length)}</span>
           <span class="pwd-clear" hidden>${escapeHtml(pass)}</span>
-          <button class="btn-eye" data-action="toggle" data-id="${item.id}">👁️ Mostrar</button>
+          <button class="btn-eye" data-action="toggle" data-id="${item.id}">👁️</button>
         </div>
         <div class="card-actions">
           <button class="btn-copy" data-action="copy" data-id="${item.id}">📋 Copiar</button>
@@ -100,13 +100,12 @@
 
   // ---------- Actions ----------
   function updateEyeButton(id, show) {
-    const text = show ? '👁️ Ocultar' : '👁️ Mostrar';
-    // Table
+    const text = show ? '👁️' : '👁️'; // Same emoji, title changes via CSS or we can use different
+    // Actually let's use title attribute for state
     const tableBtn = tbody.querySelector('.btn-eye[data-id="' + id + '"]');
-    if (tableBtn) tableBtn.textContent = text;
-    // Card
+    if (tableBtn) tableBtn.title = show ? 'Ocultar senha' : 'Mostrar senha';
     const cardBtn = cardList.querySelector('.btn-eye[data-id="' + id + '"]');
-    if (cardBtn) cardBtn.textContent = text;
+    if (cardBtn) cardBtn.title = show ? 'Ocultar senha' : 'Mostrar senha';
   }
 
   function togglePwd(id) {
