@@ -45,9 +45,20 @@
   const tbody      = $('lista-senhas');
   const cardList   = $('card-list');
   const editIdEl   = $('edit-id');
+  const loadingOverlay = $('loading-overlay');
+  const loadingText = $('loading-text');
 
   function showCofre() { telaAcesso.hidden = true; telaCofre.hidden = false; }
-  function lockCofre() { telaAcesso.hidden = false; telaCofre.hidden = true; masterKey = null; cofreCache = []; tbody.innerHTML = ''; cardList.innerHTML = ''; $('master-key').value = ''; }
+  function lockCofre() { telaAcesso.hidden = false; telaCofre.hidden = true; masterKey = null; cofreCache = []; tbody.innerHTML = ''; cardList.innerHTML = ''; $('master-key').value = ''; hideLoading(); }
+  
+  function showLoading(text = 'Processando...') {
+    loadingText.textContent = text;
+    loadingOverlay.hidden = false;
+  }
+  
+  function hideLoading() {
+    loadingOverlay.hidden = true;
+  }
 
   // ---------- Render ----------
   async function render() {
@@ -158,13 +169,17 @@
     const pwd = $('master-key').value.trim();
     if (!pwd) return alert('Digite a senha mestra');
     
+    showLoading('Validando senha mestra...');
+    
     cofreCache = loadCofre();
     
     // Se não há dados válidos, aceita qualquer senha (primeiro uso)
     if (cofreCache.length === 0) {
       masterKey = pwd;
+      showLoading('Preparando cofre...');
       showCofre();
-      render();
+      await render();
+      hideLoading();
       return;
     }
     
@@ -177,11 +192,16 @@
         break;
       } catch {}
     }
-    if (!ok) return alert('Senha incorreta.');
+    if (!ok) {
+      hideLoading();
+      return alert('Senha incorreta.');
+    }
     
     masterKey = pwd;
+    showLoading('Carregando senhas...');
     showCofre();
-    render();
+    await render();
+    hideLoading();
   });
 
   $('btn-limpar').addEventListener('click', () => {
@@ -199,6 +219,7 @@
     const pass = $('pass-reg').value;
     if (!site || !pass) return alert('Preencha todos os campos');
     const editId = editIdEl.value ? editIdEl.value : null;
+    showLoading('Salvando...');
     const encrypted = await encrypt(pass, masterKey);
     const newItem = { id: editId || crypto.randomUUID(), site, ...encrypted };
     if (editId) cofreCache = cofreCache.filter(i => i.id !== editId);
@@ -207,7 +228,8 @@
     editIdEl.value = '';
     $('site-reg').value = '';
     $('pass-reg').value = '';
-    render();
+    await render();
+    hideLoading();
   });
 
   // Delegação única na tabela E cards
@@ -224,6 +246,60 @@
   };
   tbody.addEventListener('click', handleActionClick);
   cardList.addEventListener('click', handleActionClick);
+
+  // ---------- Actions ----------
+  function updateEyeButton(id, show) {
+    const tableBtn = tbody.querySelector('.btn-eye[data-id="' + id + '"]');
+    if (tableBtn) tableBtn.title = show ? 'Ocultar senha' : 'Mostrar senha';
+    const cardBtn = cardList.querySelector('.btn-eye[data-id="' + id + '"]');
+    if (cardBtn) cardBtn.title = show ? 'Ocultar senha' : 'Mostrar senha';
+  }
+
+  function togglePwd(id) {
+    // Table
+    const cell = tbody.querySelector('.pwd-cell[data-id="' + id + '"]');
+    if (cell) {
+      const blurred = cell.querySelector('.pwd-blur');
+      const clear   = cell.querySelector('.pwd-clear');
+      const show = blurred.hidden;
+      blurred.hidden = !show;
+      clear.hidden = show;
+      updateEyeButton(id, show);
+    }
+    // Card
+    const card = cardList.querySelector('.pwd-card[data-id="' + id + '"]');
+    if (card) {
+      const blurred = card.querySelector('.pwd-blur');
+      const clear   = card.querySelector('.pwd-clear');
+      const show = blurred.hidden;
+      blurred.hidden = !show;
+      clear.hidden = show;
+      updateEyeButton(id, show);
+    }
+  }
+
+  async function copyPwd(id) {
+    const item = cofreCache.find(i => i.id === id);
+    if (!item) return;
+    const pass = await decrypt(item, masterKey);
+    await navigator.clipboard.writeText(pass);
+    alert('Senha copiada!');
+  }
+
+  function editPwd(id) {
+    const item = cofreCache.find(i => i.id === id);
+    if (!item) return;
+    $('site-reg').value = item.site;
+    editIdEl.value = id;
+    $('pass-reg').value = '';
+    $('pass-reg').focus();
+  }
+
+  function deletePwd(id) {
+    cofreCache = cofreCache.filter(i => i.id !== id);
+    saveCofre(cofreCache);
+    render();
+  }
 
   // Bloqueio por inatividade (5 min)
   let idleTimer;
