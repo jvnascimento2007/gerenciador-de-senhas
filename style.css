@@ -12,10 +12,12 @@ th { color: #6b7280; font-weight: 600; }
 input { width: 100%; padding: 0.7rem 1rem; margin-bottom: 0.75rem; border: 1px solid #d1d5db; border-radius: 10px; font-size: 1rem; transition: border 0.2s; }
 input:focus { outline: none; border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59,130,246,0.15); }
 button { width: 100%; padding: 0.75rem; border: none; border-radius: 10px; font-size: 1rem; font-weight: 600; cursor: pointer; transition: background 0.2s; }
-button:not(.btn-secondary) { background: #3b82f6; color: #fff; }
-button:not(.btn-secondary):hover { background: #2563eb; }
+button:not(.btn-secondary):not(.btn-danger) { background: #3b82f6; color: #fff; }
+button:not(.btn-secondary):not(.btn-danger):hover { background: #2563eb; }
 .btn-secondary { background: #e5e7eb; color: #374151; margin-top: 0.75rem; }
 .btn-secondary:hover { background: #d1d5db; }
+.btn-danger { background: #ef4444; color: #fff; margin-top: 0.75rem; }
+.btn-danger:hover { background: #dc2626; }
 td:last-child { white-space: nowrap; }
 td:last-child button { width: auto; padding: 0.4rem 0.7rem; font-size: 0.85rem; margin: 0 0.2rem; border-radius: 6px; }
 @media (max-width: 900px) { .dashboard { flex-direction: column; } .col-registro { max-width: 100%; } }
