@@ -1,11 +1,4 @@
 let masterKey = null;
-let inactivityTimer;
-
-function resetTimer() {
-    clearTimeout(inactivityTimer);
-    inactivityTimer = setTimeout(() => { alert("Sessão expirada."); location.reload(); }, 300000);
-}
-document.onmousemove = resetTimer;
 
 async function deriveKey(masterPassword, salt) {
     const encoder = new TextEncoder();
@@ -34,15 +27,29 @@ async function desbloquear() {
 async function salvar() {
     const site = document.getElementById('site-reg').value;
     const pass = document.getElementById('pass-reg').value;
+    const editId = document.getElementById('edit-id').value;
     if (!site || !pass) return alert("Preencha tudo!");
+    
+    let cofre = JSON.parse(localStorage.getItem('cofre') || '[]');
+    if (editId) {
+        cofre = cofre.filter(i => i.id != editId);
+        document.getElementById('edit-id').value = '';
+    }
+    
     const salt = crypto.getRandomValues(new Uint8Array(16));
     const iv = crypto.getRandomValues(new Uint8Array(12));
     const key = await deriveKey(masterKey, salt);
     const ciphertext = await crypto.subtle.encrypt({ name: "AES-GCM", iv }, key, new TextEncoder().encode(pass));
-    const cofre = JSON.parse(localStorage.getItem('cofre') || '[]');
-    cofre.push({ id: Date.now(), site, ciphertext: btoa(String.fromCharCode(...new Uint8Array(ciphertext))), salt: btoa(String.fromCharCode(...salt)), iv: btoa(String.fromCharCode(...iv)) });
+    
+    cofre.push({ id: editId || Date.now(), site, ciphertext: btoa(String.fromCharCode(...new Uint8Array(ciphertext))), salt: btoa(String.fromCharCode(...salt)), iv: btoa(String.fromCharCode(...iv)) });
     localStorage.setItem('cofre', JSON.stringify(cofre));
     listarSenhas();
+}
+
+function editar(id, site, pass) {
+    document.getElementById('site-reg').value = site;
+    document.getElementById('pass-reg').value = pass;
+    document.getElementById('edit-id').value = id;
 }
 
 function excluir(id) {
@@ -52,10 +59,7 @@ function excluir(id) {
     listarSenhas();
 }
 
-function copiar(texto) {
-    navigator.clipboard.writeText(texto);
-    alert("Copiado!");
-}
+function copiar(texto) { navigator.clipboard.writeText(texto); alert("Copiado!"); }
 
 async function listarSenhas() {
     const cofre = JSON.parse(localStorage.getItem('cofre') || '[]');
@@ -74,6 +78,7 @@ async function listarSenhas() {
             <td>
                 <button onclick="document.getElementById('pass-${item.id}').style.filter='none'">👁️</button>
                 <button onclick="copiar('${pass}')">📋</button>
+                <button onclick="editar(${item.id}, '${item.site}', '${pass}')">✏️</button>
                 <button onclick="excluir(${item.id})">🗑️</button>
             </td>`;
         tbody.appendChild(tr);
