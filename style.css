@@ -16,11 +16,13 @@ td:last-child { white-space: nowrap; }
 td:last-child button { width: auto; padding: 0.4rem 0.7rem; font-size: 0.85rem; margin: 0 0.2rem; border-radius: 6px; }
 
 /* CARDS - Mobile */
-.card-list { display: none; }
+.card-list { display: none; flex-direction: column; gap: 1rem; }
+.pwd-card { padding: 1rem; background: #fafafa; border-radius: 12px; border: 1px solid #eef0f2; }
+.card-header { font-weight: 600; font-size: 1rem; margin-bottom: 0.75rem; padding-bottom: 0.5rem; border-bottom: 1px solid #eef0f2; color: #1a1a2e; }
 .pwd-row { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; }
 .pwd-row .pwd-blur,
-.pwd-row .pwd-clear { flex: 1; min-width: 120px; }
-.card-actions { display: flex; gap: 0.5rem; margin-top: 0.5rem; flex-wrap: wrap; }
+.pwd-row .pwd-clear { flex: 1; min-width: 120px; font-family: monospace; font-size: 0.95rem; padding: 0.5rem; background: #fff; border-radius: 8px; border: 1px solid #eef0f2; text-align: left; }
+.card-actions { display: flex; gap: 0.5rem; margin-top: 0.75rem; flex-wrap: wrap; }
 .card-actions button { flex: 1; min-width: 80px; }
 
 input { width: 100%; padding: 0.7rem 1rem; margin-bottom: 0.75rem; border: 1px solid #d1d5db; border-radius: 10px; font-size: 1rem; transition: border 0.2s; }
@@ -40,11 +42,10 @@ button:not(.btn-secondary):not(.btn-danger):hover { background: #2563eb; }
 
 @media (max-width: 640px) {
   .table-wrap { display: none; }
-  .card-list { display: block; }
-  .pwd-cell { display: flex; flex-direction: column; gap: 0.5rem; }
+  .card-list { display: flex; }
   .pwd-row { width: 100%; }
   .pwd-row .pwd-blur,
-  .pwd-row .pwd-clear { width: 100%; font-family: monospace; font-size: 0.95rem; padding: 0.5rem; background: #f9fafb; border-radius: 8px; border: 1px solid #eef0f2; text-align: left; }
+  .pwd-row .pwd-clear { width: 100%; }
   .card-actions { width: 100%; }
   .card-actions button { width: 100%; padding: 0.6rem; font-size: 0.9rem; }
 }
