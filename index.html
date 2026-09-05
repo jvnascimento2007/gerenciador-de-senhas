@@ -2,21 +2,29 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <title>Gerenciador de Senhas</title>
+    <title>Cofre de Senhas Pro</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <div class="container">
         <h1>Cofre de Senhas</h1>
-        <input type="password" id="master-password" placeholder="Mestre Senha">
-        <input type="text" id="site" placeholder="Site">
-        <input type="password" id="password" placeholder="Senha">
-        <button onclick="salvar()">Salvar</button>
+        
+        <section id="registrar">
+            <h2>Registrar Nova Senha</h2>
+            <input type="password" id="master-reg" placeholder="Mestre Senha">
+            <input type="text" id="site-reg" placeholder="Site">
+            <input type="password" id="pass-reg" placeholder="Senha">
+            <button onclick="salvar()">Salvar no Cofre</button>
+        </section>
+
         <hr>
-        <h3>Senhas Salvas</h3>
-        <input type="text" id="site-busca" placeholder="Buscar site">
-        <button onclick="buscar()">Buscar/Descriptografar</button>
-        <p id="resultado"></p>
+
+        <section id="acessar">
+            <h2>Abrir Cofre</h2>
+            <input type="password" id="master-open" placeholder="Mestre Senha">
+            <button onclick="abrirCofre()">Desbloquear e Listar</button>
+            <div id="lista-senhas"></div>
+        </section>
     </div>
     <script src="app.js"></script>
 </body>
