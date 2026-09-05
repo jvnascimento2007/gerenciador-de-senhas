@@ -1,13 +1,11 @@
 let masterKey = null;
-
-// Timer de inatividade (5 minutos)
 let inactivityTimer;
+
 function resetTimer() {
     clearTimeout(inactivityTimer);
-    inactivityTimer = setTimeout(() => { alert("Sessão expirada por inatividade."); location.reload(); }, 300000);
+    inactivityTimer = setTimeout(() => { alert("Sessão expirada."); location.reload(); }, 300000);
 }
 document.onmousemove = resetTimer;
-document.onkeypress = resetTimer;
 
 async function deriveKey(masterPassword, salt) {
     const encoder = new TextEncoder();
@@ -20,64 +18,64 @@ async function deriveKey(masterPassword, salt) {
 
 async function desbloquear() {
     const master = document.getElementById('master-key').value;
-    if (!master) return alert("Digite a senha mestre!");
-    
-    // Validação básica: tenta descriptografar o primeiro item, se existir
     const cofre = JSON.parse(localStorage.getItem('cofre') || '[]');
     if (cofre.length > 0) {
         try {
-            const item = cofre[0];
-            const salt = Uint8Array.from(atob(item.salt), c => c.charCodeAt(0));
+            const salt = Uint8Array.from(atob(cofre[0].salt), c => c.charCodeAt(0));
             await deriveKey(master, salt);
-        } catch(e) {
-            return alert("Senha mestre incorreta!");
-        }
+        } catch(e) { return alert("Senha mestre incorreta!"); }
     }
-    
     masterKey = master;
     document.getElementById('tela-acesso').style.display = 'none';
     document.getElementById('tela-cofre').style.display = 'block';
     listarSenhas();
-    resetTimer();
 }
 
 async function salvar() {
     const site = document.getElementById('site-reg').value;
     const pass = document.getElementById('pass-reg').value;
     if (!site || !pass) return alert("Preencha tudo!");
-    
     const salt = crypto.getRandomValues(new Uint8Array(16));
     const iv = crypto.getRandomValues(new Uint8Array(12));
     const key = await deriveKey(masterKey, salt);
     const ciphertext = await crypto.subtle.encrypt({ name: "AES-GCM", iv }, key, new TextEncoder().encode(pass));
-    
     const cofre = JSON.parse(localStorage.getItem('cofre') || '[]');
-    cofre.push({
-        site,
-        ciphertext: btoa(String.fromCharCode(...new Uint8Array(ciphertext))),
-        salt: btoa(String.fromCharCode(...salt)),
-        iv: btoa(String.fromCharCode(...iv))
-    });
+    cofre.push({ id: Date.now(), site, ciphertext: btoa(String.fromCharCode(...new Uint8Array(ciphertext))), salt: btoa(String.fromCharCode(...salt)), iv: btoa(String.fromCharCode(...iv)) });
     localStorage.setItem('cofre', JSON.stringify(cofre));
-    alert("Senha salva!");
     listarSenhas();
+}
+
+function excluir(id) {
+    let cofre = JSON.parse(localStorage.getItem('cofre') || '[]');
+    cofre = cofre.filter(item => item.id !== id);
+    localStorage.setItem('cofre', JSON.stringify(cofre));
+    listarSenhas();
+}
+
+function copiar(texto) {
+    navigator.clipboard.writeText(texto);
+    alert("Copiado!");
 }
 
 async function listarSenhas() {
     const cofre = JSON.parse(localStorage.getItem('cofre') || '[]');
-    const lista = document.getElementById('lista-senhas');
-    lista.innerHTML = '';
-    
+    const tbody = document.getElementById('lista-senhas');
+    tbody.innerHTML = '';
     for (const item of cofre) {
-        try {
-            const salt = Uint8Array.from(atob(item.salt), c => c.charCodeAt(0));
-            const iv = Uint8Array.from(atob(item.iv), c => c.charCodeAt(0));
-            const ciphertext = Uint8Array.from(atob(item.ciphertext), c => c.charCodeAt(0));
-            const key = await deriveKey(masterKey, salt);
-            const decrypted = await crypto.subtle.decrypt({ name: "AES-GCM", iv }, key, ciphertext);
-            lista.innerHTML += `<tr><td>${item.site}</td><td>${new TextDecoder().decode(decrypted)}</td></tr>`;
-        } catch {
-            lista.innerHTML += `<p style="color:red">${item.site}: Erro ao descriptografar (senha incorreta)</p>`;
-        }
+        const salt = Uint8Array.from(atob(item.salt), c => c.charCodeAt(0));
+        const iv = Uint8Array.from(atob(item.iv), c => c.charCodeAt(0));
+        const ciphertext = Uint8Array.from(atob(item.ciphertext), c => c.charCodeAt(0));
+        const key = await deriveKey(masterKey, salt);
+        const decrypted = await crypto.subtle.decrypt({ name: "AES-GCM", iv }, key, ciphertext);
+        const pass = new TextDecoder().decode(decrypted);
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td>${item.site}</td>
+            <td id="pass-${item.id}" style="filter:blur(5px)">${pass}</td>
+            <td>
+                <button onclick="document.getElementById('pass-${item.id}').style.filter='none'">👁️</button>
+                <button onclick="copiar('${pass}')">📋</button>
+                <button onclick="excluir(${item.id})">🗑️</button>
+            </td>`;
+        tbody.appendChild(tr);
     }
 }
