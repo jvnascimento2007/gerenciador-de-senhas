@@ -7,7 +7,7 @@
   async function deriveKey(pwd, salt) {
     const enc = new TextEncoder();
     const base = await crypto.subtle.importKey('raw', enc.encode(pwd), 'PBKDF2', false, ['deriveKey']);
-    return crypto.subtle.deriveKey({ name: 'PBKDF2', salt, iterations: 100000, hash: 'SHA-256' },
+    return crypto.subtle.deriveKey({ name: 'PBKDF2', salt, iterations: 600000, hash: 'SHA-256' },
       base, { name: 'AES-GCM', length: 256 }, false, ['encrypt', 'decrypt']);
   }
 
@@ -95,13 +95,12 @@
       .replace(/&/g, '&')
       .replace(/</g, '<')
       .replace(/>/g, '>')
-      .replace(/"/g, '"');
+      .replace(/"/g, '"')
+      .replace(/'/g, '\'');
   }
 
   // ---------- Actions ----------
   function updateEyeButton(id, show) {
-    const text = show ? '👁️' : '👁️'; // Same emoji, title changes via CSS or we can use different
-    // Actually let's use title attribute for state
     const tableBtn = tbody.querySelector('.btn-eye[data-id="' + id + '"]');
     if (tableBtn) tableBtn.title = show ? 'Ocultar senha' : 'Mostrar senha';
     const cardBtn = cardList.querySelector('.btn-eye[data-id="' + id + '"]');
@@ -169,15 +168,20 @@
       return;
     }
     
-    // Há dados - validar senha
-    try {
-      await decrypt(cofreCache[0], pwd);
-      masterKey = pwd;
-      showCofre();
-      render();
-    } catch (e) {
-      alert('Senha incorreta.');
+    // Há dados - validar senha em TODOS os itens (evita falso-negativo se primeiro item corrompido)
+    let ok = false;
+    for (const item of cofreCache) {
+      try {
+        await decrypt(item, pwd);
+        ok = true;
+        break;
+      } catch {}
     }
+    if (!ok) return alert('Senha incorreta.');
+    
+    masterKey = pwd;
+    showCofre();
+    render();
   });
 
   $('btn-limpar').addEventListener('click', () => {
@@ -194,9 +198,9 @@
     const site = $('site-reg').value.trim();
     const pass = $('pass-reg').value;
     if (!site || !pass) return alert('Preencha todos os campos');
-    const editId = editIdEl.value ? Number(editIdEl.value) : null;
+    const editId = editIdEl.value ? editIdEl.value : null;
     const encrypted = await encrypt(pass, masterKey);
-    const newItem = { id: editId || Date.now() + Math.random(), site, ...encrypted };
+    const newItem = { id: editId || crypto.randomUUID(), site, ...encrypted };
     if (editId) cofreCache = cofreCache.filter(i => i.id !== editId);
     cofreCache.push(newItem);
     saveCofre(cofreCache);
@@ -210,7 +214,7 @@
   const handleActionClick = e => {
     const btn = e.target.closest('button[data-action]');
     if (!btn) return;
-    const id = Number(btn.dataset.id);
+    const id = btn.dataset.id;
     switch (btn.dataset.action) {
       case 'toggle': togglePwd(id); break;
       case 'copy':   copyPwd(id);   break;
