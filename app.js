@@ -158,11 +158,11 @@
     $('pass-reg').focus();
   }
 
-  function deletePwd(id) {
+  async function deletePwd(id) {
     showLoading('Excluindo...');
     cofreCache = cofreCache.filter(i => i.id !== id);
     saveCofre(cofreCache);
-    render();
+    await render();
     hideLoading();
   }
 
