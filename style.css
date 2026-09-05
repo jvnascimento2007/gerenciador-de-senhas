@@ -1,6 +1,6 @@
 body { font-family: 'Segoe UI', sans-serif; background-color: #f8f9fa; margin: 0; padding: 20px; color: #333; }
 .container { max-width: 400px; margin: 50px auto; background: white; padding: 2rem; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); text-align: center; }
-.dashboard { display: flex; gap: 2rem; max-width: 1000px; margin: 0 auto; flex-wrap: wrap; }
+.dashboard { display: flex; gap: 4rem; max-width: 1000px; margin: 0 auto; flex-wrap: wrap; }
 .col-lista, .col-registro { flex: 1; min-width: 300px; background: white; padding: 2rem; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
 
 table { width: 100%; border-collapse: collapse; margin-top: 10px; }
